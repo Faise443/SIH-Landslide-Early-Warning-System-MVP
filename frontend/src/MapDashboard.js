@@ -16,7 +16,7 @@ const MapDashboard = ({ language }) => {
   const [citizenNode, setCitizenNode] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
+  const [, setLastUpdated] = useState(new Date().toLocaleTimeString());
 
   const nerCenter = [26.1158, 91.7086];
 
@@ -46,11 +46,12 @@ const MapDashboard = ({ language }) => {
     }
   };
 
-  useEffect(() => {
-    fetchAuthorityRisks();
-    const interval = setInterval(fetchAuthorityRisks, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
+  fetchAuthorityRisks();
+  const interval = setInterval(fetchAuthorityRisks, 60000);
+  return () => clearInterval(interval);
+}, []);
 
   const evaluateCoordinates = async (name, lat, lon) => {
     setLoading(true);
