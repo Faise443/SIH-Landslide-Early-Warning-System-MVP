@@ -29,7 +29,7 @@ if os.path.exists("rf_model.pkl"):
     with open("rf_model.pkl", "rb") as f:
         model = pickle.load(f)
 
-API_KEY = "ebc6a4827f6ae7858fd0985b81bcfd54"
+API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
 @app.get("/")
 def home():
