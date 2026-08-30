@@ -17,7 +17,7 @@ const MapDashboard = ({ language }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
-  
+
   const nerCenter = [26.1158, 91.7086];
 
   const vulnerableNodes = [
@@ -31,9 +31,13 @@ const MapDashboard = ({ language }) => {
   const fetchAuthorityRisks = async () => {
     try {
       const promises = vulnerableNodes.map(async (node) => {
-        const response = await axios.post('http://localhost:8000/predict-risk', node);
+        const response = await axios.post(
+          'https://sih-landslide-early-warning-system-mvp.onrender.com/predict-risk',
+          node
+        );
         return { ...node, ...response.data };
       });
+
       const results = await Promise.all(promises);
       setAuthorityNodes(results);
       setLastUpdated(new Date().toLocaleTimeString());
@@ -50,6 +54,7 @@ const MapDashboard = ({ language }) => {
 
   const evaluateCoordinates = async (name, lat, lon) => {
     setLoading(true);
+
     try {
       const payload = {
         name: name,
@@ -60,22 +65,32 @@ const MapDashboard = ({ language }) => {
         elevation_m: 900,
         soil_cohesion: 2.5
       };
-      const response = await axios.post('http://localhost:8000/predict-risk', payload);
+
+      const response = await axios.post(
+        'https://sih-landslide-early-warning-system-mvp.onrender.com/predict-risk',
+        payload
+      );
+
       setCitizenNode({ ...payload, ...response.data });
     } catch (error) {
       console.error("Error evaluating citizen location:", error);
     }
+
     setLoading(false);
   };
 
   const handleMapClick = (latlng) => {
-    evaluateCoordinates(`Custom Point (${latlng.lat.toFixed(2)}, ${latlng.lng.toFixed(2)})`, latlng.lat, latlng.lng);
+    evaluateCoordinates(
+      `Custom Point (${latlng.lat.toFixed(2)}, ${latlng.lng.toFixed(2)})`,
+      latlng.lat,
+      latlng.lng
+    );
   };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (!searchQuery) return;
-    
+
     // Expanded database of North Eastern towns and hill stations
     const coordsMap = {
       "itanagar": { lat: 27.0844, lon: 93.6053 },
@@ -104,88 +119,201 @@ const MapDashboard = ({ language }) => {
     };
 
     const key = searchQuery.toLowerCase().trim();
+
     if (coordsMap[key]) {
-      evaluateCoordinates(searchQuery.toUpperCase(), coordsMap[key].lat, coordsMap[key].lon);
+      evaluateCoordinates(
+        searchQuery.toUpperCase(),
+        coordsMap[key].lat,
+        coordsMap[key].lon
+      );
     } else {
-      alert(`Town not found in quick-index. Please click directly on the map near your location, or search major towns like Tawang, Ziro, Silchar, Dimapur, Pasighat, etc.`);
+      alert(
+        `Town not found in quick-index. Please click directly on the map near your location, or search major towns like Tawang, Ziro, Silchar, Dimapur, Pasighat, etc.`
+      );
     }
   };
 
   const translations = {
-    en: { 
+    en: {
       authTitle: "🛡️ Authority Dashboard: Automated Regional Risk Surveillance",
       citizenTitle: "🔍 Citizen Portal: Search Town or Click Map",
       searchPlaceholder: "Search town (e.g. Tawang, Ziro, Silchar)...",
       searchBtn: "Check Risk",
       clickTip: "Or click anywhere on the map to evaluate coordinates.",
-      popupTitle: "Risk Status", 
+      popupTitle: "Risk Status",
       rain: "Live Rainfall",
       temp: "Temperature",
       weather: "Weather"
     },
-    bn: { 
+
+    bn: {
       authTitle: "🛡️ কর্তৃপক্ষ ড্যাশবোর্ড: স্বয়ংক্রিয় আঞ্চলিক ঝুঁকি পর্যবেক্ষণ",
       citizenTitle: "🔍 নাগরিক পোর্টাল: শহর খুঁজুন বা মানচিত্রে ক্লিক করুন",
       searchPlaceholder: "শহর খুঁজুন...",
       searchBtn: "ঝুঁকি পরীক্ষা করুন",
       clickTip: "অথবা মানচিত্রে ক্লিক করে স্থানাঙ্ক পরীক্ষা করুন।",
-      popupTitle: "ঝুঁকির অবস্থা", 
+      popupTitle: "ঝুঁকির অবস্থা",
       rain: "লাইভ বৃষ্টি",
       temp: "তাপমাত্রা",
       weather: "আবহাওয়া"
     }
   };
+
   const t = translations[language] || translations.en;
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "15px" }}>
-        
-        <div style={{ padding: "12px", backgroundColor: "#e3f2fd", borderRadius: "8px", border: "1px solid #90caf9" }}>
-          <h4 style={{ margin: "0 0 5px 0", color: "#0d47a1", fontSize: "14px" }}>{t.authTitle}</h4>
-          <span style={{ fontSize: "12px", color: "#333" }}>Monitoring 5 high-priority regional nodes. Auto-updates every 60s.</span>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "15px",
+          marginBottom: "15px"
+        }}
+      >
+
+        <div
+          style={{
+            padding: "12px",
+            backgroundColor: "#e3f2fd",
+            borderRadius: "8px",
+            border: "1px solid #90caf9"
+          }}
+        >
+          <h4
+            style={{
+              margin: "0 0 5px 0",
+              color: "#0d47a1",
+              fontSize: "14px"
+            }}
+          >
+            {t.authTitle}
+          </h4>
+
+          <span style={{ fontSize: "12px", color: "#333" }}>
+            Monitoring 5 high-priority regional nodes. Auto-updates every 60s.
+          </span>
         </div>
 
-        <div style={{ padding: "12px", backgroundColor: "#e8f5e9", borderRadius: "8px", border: "1px solid #a5d6a7" }}>
-          <h4 style={{ margin: "0 0 5px 0", color: "#1b5e20", fontSize: "14px" }}>{t.citizenTitle}</h4>
-          <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: "5px" }}>
-            <input 
-              type="text" 
-              placeholder={t.searchPlaceholder} 
+        <div
+          style={{
+            padding: "12px",
+            backgroundColor: "#e8f5e9",
+            borderRadius: "8px",
+            border: "1px solid #a5d6a7"
+          }}
+        >
+          <h4
+            style={{
+              margin: "0 0 5px 0",
+              color: "#1b5e20",
+              fontSize: "14px"
+            }}
+          >
+            {t.citizenTitle}
+          </h4>
+
+          <form
+            onSubmit={handleSearchSubmit}
+            style={{ display: "flex", gap: "5px" }}
+          >
+            <input
+              type="text"
+              placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc", fontSize: "12px", flex: 1 }}
+              style={{
+                padding: "4px 8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                fontSize: "12px",
+                flex: 1
+              }}
             />
-            <button type="submit" style={{ padding: "4px 10px", backgroundColor: "#2e7d32", color: "white", border: "none", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}>
+
+            <button
+              type="submit"
+              style={{
+                padding: "4px 10px",
+                backgroundColor: "#2e7d32",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                fontSize: "12px",
+                cursor: "pointer"
+              }}
+            >
               {t.searchBtn}
             </button>
           </form>
-          <div style={{ fontSize: "11px", color: "#555", marginTop: "4px" }}>{t.clickTip} {loading && "⏳ Analyzing..."}</div>
-        </div>
 
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#555",
+              marginTop: "4px"
+            }}
+          >
+            {t.clickTip} {loading && "⏳ Analyzing..."}
+          </div>
+        </div>
       </div>
 
-      <div style={{ height: "460px", width: "100%", borderRadius: "10px", overflow: "hidden", border: "2px solid #333" }}>
-        <MapContainer center={nerCenter} zoom={6} style={{ height: "100%", width: "100%" }}>
+      <div
+        style={{
+          height: "460px",
+          width: "100%",
+          borderRadius: "10px",
+          overflow: "hidden",
+          border: "2px solid #333"
+        }}
+      >
+        <MapContainer
+          center={nerCenter}
+          zoom={6}
+          style={{ height: "100%", width: "100%" }}
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; OpenStreetMap contributors'
+            attribution="&copy; OpenStreetMap contributors"
           />
+
           <LocationClickHandler onMapClick={handleMapClick} />
 
           {authorityNodes.map((data, index) => (
             <CircleMarker
               key={index}
               center={[data.lat, data.lon]}
-              pathOptions={{ color: "#0d47a1", fillColor: data.map_color, fillOpacity: 0.6 }}
+              pathOptions={{
+                color: "#0d47a1",
+                fillColor: data.map_color,
+                fillOpacity: 0.6
+              }}
               radius={26}
             >
               <Popup>
-                <strong style={{ fontSize: "15px", color: "#0d47a1" }}>[Authority Node] {data.name}</strong><br/>
-                <hr style={{ margin: "5px 0" }}/>
-                <strong>{t.popupTitle}:</strong> {data.prediction} <br/><br/>
-                <strong>{t.weather}:</strong> {data.weather_desc} <br/>
-                <strong>{t.rain}:</strong> {data.live_rainfall_mm} mm <br/>
+                <strong
+                  style={{
+                    fontSize: "15px",
+                    color: "#0d47a1"
+                  }}
+                >
+                  [Authority Node] {data.name}
+                </strong>
+
+                <br />
+                <hr style={{ margin: "5px 0" }} />
+
+                <strong>{t.popupTitle}:</strong> {data.prediction}
+                <br />
+                <br />
+
+                <strong>{t.weather}:</strong> {data.weather_desc}
+                <br />
+
+                <strong>{t.rain}:</strong> {data.live_rainfall_mm} mm
+                <br />
+
                 <strong>{t.temp}:</strong> {data.location_temp} °C
               </Popup>
             </CircleMarker>
@@ -194,19 +322,41 @@ const MapDashboard = ({ language }) => {
           {citizenNode && (
             <CircleMarker
               center={[citizenNode.lat, citizenNode.lon]}
-              pathOptions={{ color: "#d32f2f", fillColor: citizenNode.map_color, fillOpacity: 0.8 }}
+              pathOptions={{
+                color: "#d32f2f",
+                fillColor: citizenNode.map_color,
+                fillOpacity: 0.8
+              }}
               radius={32}
             >
               <Popup>
-                <strong style={{ fontSize: "15px", color: "#d32f2f" }}>[Citizen Check] {citizenNode.name}</strong><br/>
-                <hr style={{ margin: "5px 0" }}/>
-                <strong>{t.popupTitle}:</strong> {citizenNode.prediction} <br/><br/>
-                <strong>{t.weather}:</strong> {citizenNode.weather_desc} <br/>
-                <strong>{t.rain}:</strong> {citizenNode.live_rainfall_mm} mm <br/>
+                <strong
+                  style={{
+                    fontSize: "15px",
+                    color: "#d32f2f"
+                  }}
+                >
+                  [Citizen Check] {citizenNode.name}
+                </strong>
+
+                <br />
+                <hr style={{ margin: "5px 0" }} />
+
+                <strong>{t.popupTitle}:</strong> {citizenNode.prediction}
+                <br />
+                <br />
+
+                <strong>{t.weather}:</strong> {citizenNode.weather_desc}
+                <br />
+
+                <strong>{t.rain}:</strong> {citizenNode.live_rainfall_mm} mm
+                <br />
+
                 <strong>{t.temp}:</strong> {citizenNode.location_temp} °C
               </Popup>
             </CircleMarker>
           )}
+
         </MapContainer>
       </div>
     </div>
